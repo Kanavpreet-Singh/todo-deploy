@@ -1,6 +1,6 @@
-import { prismaClient } from "db/client";
+import { prisma } from "db";
 
-  const users = await prismaClient.user.findMany();
+  const users = await prisma.user.findMany();
 
   export default async function Home(){
 

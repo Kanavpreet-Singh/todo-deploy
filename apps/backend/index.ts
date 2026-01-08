@@ -1,5 +1,5 @@
 import express from "express"
-import { prismaClient } from "db/client";
+import { prisma } from "db";
 
 const app = express();
 app.use(express.json());
@@ -7,7 +7,7 @@ app.use(express.json());
 // Fetch all todos
 app.get("/todos", async (req, res) => {
     try {
-        const todos = await prismaClient.todo.findMany();
+        const todos = await prisma.todo.findMany();
         res.json(todos);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch todos" });
@@ -18,7 +18,7 @@ app.get("/todos", async (req, res) => {
 app.post("/todos", async (req, res) => {
     const { task, done = false, userId } = req.body;
     try {
-        const todo = await prismaClient.todo.create({
+        const todo = await prisma.todo.create({
             data: { task, done, userId },
         });
         res.status(201).json(todo);
@@ -30,7 +30,7 @@ app.post("/todos", async (req, res) => {
 // Fetch all users
 app.get("/users", async (req, res) => {
     try {
-        const users = await prismaClient.user.findMany({
+        const users = await prisma.user.findMany({
             include: { todos: true }
         });
         res.json(users);
@@ -43,7 +43,7 @@ app.get("/users", async (req, res) => {
 app.post("/users", async (req, res) => {
     const { username, password } = req.body;
     try {
-        const user = await prismaClient.user.create({
+        const user = await prisma.user.create({
             data: { username, password },
         });
         res.status(201).json(user);
@@ -52,4 +52,6 @@ app.post("/users", async (req, res) => {
     }
 });
 
-app.listen(3001);
+app.listen(3001, () => {
+    console.log("Backend is running on port 3001 and file is ok!");
+});
