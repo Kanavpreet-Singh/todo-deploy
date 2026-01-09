@@ -11,6 +11,9 @@ COPY ./apps/backend ./apps/backend
 
 
 RUN bun install
+
+# Set a dummy DATABASE_URL for Prisma generate
+ENV DATABASE_URL="postgresql://neondb_owner:npg_Z4bgySvFpN3i@ep-wispy-band-a88duacl-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require"
 RUN bun run db:generate
 
 EXPOSE 3001
