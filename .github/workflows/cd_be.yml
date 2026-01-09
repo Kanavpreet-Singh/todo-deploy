@@ -1,29 +1,22 @@
-name: Deploy the backend
-on:
-  push:
-    branches: [ main ]
-jobs: 
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the code
-        uses: actions/checkout@v2
+- name: Setup SSH
+  run: |
+    mkdir -p ~/.ssh
+    echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+    chmod 600 ~/.ssh/id_rsa
 
-      - name: Docker login
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Build and push 
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./docker/Dockerfile.be
-          push: true
-          tags: kanav055/todo-app-backend:${{ github.sha }}
-      - name: Deploy to the VM
-        run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" &> ~/ssh_key
-          chmod 700 /home/runner/ssh_key
-          ssh -o StrictHostKeyChecking=no -i ~/ssh_key ubuntu@13.233.104.43 -t "docker stop user_backend ||true && docker rm user_backend || true && docker run --name user_backend -d -p 3001:3001 kanav055/todo-app-backend:${{ github.sha }}"
+- name: Deploy to EC2
+  run: |
+    ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@13.233.104.43 << 'EOF'
+      docker pull kanav055/todo-app-backend:latest
+
+      docker stop user_backend || true
+      docker rm user_backend || true
+
+      docker image prune -a -f
+
+      docker run -d \
+        --name user_backend \
+        -p 3001:3001 \
+        --restart unless-stopped \
+        kanav055/todo-app-backend:latest
+    EOF
